@@ -15,9 +15,7 @@ chrome.contextMenus.onClicked.addListener(async ({ menuItemId, linkUrl }) => {
     if (toolTabs) {
       pushVideoToExistingTools(toolTabs[0], { type: 'youtube', url: linkUrl });
     } else {
-      const query = linkUrl.split('?')[1];
-      const params = new URLSearchParams(query);
-      const ytVideoId = params.has('v') && params.get('v');
+      const ytVideoId = extractYouTubeVideoId(linkUrl);
       chrome.tabs.create({ url: `${TOOLS_URL}/#/watch?videoId=${ytVideoId}` });
     }
   }
@@ -30,9 +28,7 @@ chrome.browserAction.onClicked.addListener(async tab => {
   const isYouTubeVideo = tab.url.match(YT_REGEX);
   const toolTabs = await getExistingToolTabsOrNull();
 
-  const query = tab.url.split('?')[1];
-  const params = new URLSearchParams(query);
-  const ytVideoId = params.has('v') && params.get('v');
+  const ytVideoId = extractYouTubeVideoId(tab.url);
 
   if (!isYouTubeVideo) {
     return;
@@ -56,4 +52,10 @@ function getExistingToolTabsOrNull() {
 function pushVideoToExistingTools(tab, payload) {
   chrome.tabs.sendMessage(tab.id, { action: 'append', payload });
   chrome.tabs.update(tab.id, { selected: true });
+}
+
+function extractYouTubeVideoId(url) {
+  const query = url.split('?')[1];
+  const params = new URLSearchParams(query);
+  return params.has('v') && params.get('v');
 }
