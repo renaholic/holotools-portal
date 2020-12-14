@@ -25,11 +25,11 @@ chrome.contextMenus.onClicked.addListener(async ({ menuItemId, linkUrl }) => {
 const YT_REGEX = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*).*/;
 
 chrome.browserAction.onClicked.addListener(async tab => {
-  const isYouTubeVideo = tab.url.match(YT_REGEX);
+  const isYouTubeVideo = YT_REGEX.test(tab.url);
+
   const toolTabs = await getExistingToolTabsOrNull();
 
   const ytVideoId = extractYouTubeVideoId(tab.url);
-
   if (!isYouTubeVideo) {
     return;
   }
