@@ -4,6 +4,7 @@
   "description": "Quickly jump from current YouTube video to HoloTools website!",
   "manifest_version": 2,
   "permissions": [
+    "contextMenus",
     "activeTab",
     "tabs"
   ],
