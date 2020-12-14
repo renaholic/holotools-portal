@@ -1,5 +1,28 @@
 const TOOLS_URL = 'https://hololive.jetri.co';
 
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    title: 'Add to HoloTools',
+    id: 'add-to-holotool',
+    contexts: ['link'],
+    targetUrlPatterns: ['*://www.youtube.com/watch*'],
+  });
+});
+
+chrome.contextMenus.onClicked.addListener(async ({ menuItemId, linkUrl }) => {
+  if (menuItemId === "add-to-holotool") {
+    const toolTabs = await getExistingToolTabsOrNull();
+    if (toolTabs) {
+      pushVideoToExistingTools(toolTabs[0], { type: 'youtube', url: linkUrl });
+    } else {
+      const query = linkUrl.split('?')[1];
+      const params = new URLSearchParams(query);
+      const ytVideoId = params.has('v') && params.get('v');
+      chrome.tabs.create({ url: `${TOOLS_URL}/#/watch?videoId=${ytVideoId}` });
+    }
+  }
+});
+
 // rip the regex from https://stackoverflow.com/questions/28735459/how-to-validate-youtube-url-in-client-side-in-text-box
 const YT_REGEX = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*).*/;
 
