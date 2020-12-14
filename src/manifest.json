@@ -3,10 +3,24 @@
   "version": "1.0.1",
   "description": "Quickly jump from current YouTube video to HoloTools website!",
   "manifest_version": 2,
-
-  "permissions": ["activeTab"],
+  "permissions": [
+    "activeTab",
+    "tabs"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://hololive.jetri.co/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
   "background": {
-    "scripts": ["background.js"],
+    "scripts": [
+      "background.js"
+    ],
     "persistent": false
   },
   "browser_action": {

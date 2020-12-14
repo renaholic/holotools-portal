@@ -1,20 +1,36 @@
-chrome.browserAction.onClicked.addListener((tab) => {
-  const toolsUrls = ['hololive.jetri.co'];
-  if (toolsUrls.some(url => tab.url.includes(url))) {
-    return;
-  }
-  const toolsUrl = 'https://hololive.jetri.co';
-  const newTab = 'chrome://newtab/';
+const TOOLS_URL = 'https://hololive.jetri.co';
+
+// rip the regex from https://stackoverflow.com/questions/28735459/how-to-validate-youtube-url-in-client-side-in-text-box
+const YT_REGEX = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*).*/;
+
+chrome.browserAction.onClicked.addListener(async tab => {
+  const isYouTubeVideo = tab.url.match(YT_REGEX);
+  const toolTabs = await getExistingToolTabsOrNull();
 
   const query = tab.url.split('?')[1];
   const params = new URLSearchParams(query);
   const ytVideoId = params.has('v') && params.get('v');
 
-  ytVideoId || tab.url === newTab
-    ? chrome.tabs.update(tab.id, {
-      url: ytVideoId ? `${toolsUrl}/#/watch?videoId=${ytVideoId}` : toolsUrl,
-    })
-    : chrome.tabs.create({
-      url: toolsUrl,
-    });
+  if (!isYouTubeVideo) {
+    return;
+  }
+
+  if (isYouTubeVideo) {
+    if (toolTabs.length > 0) {
+      pushVideoToExistingTools(toolTabs[0], { type: 'youtube', url: tab.url });
+    } else {
+      chrome.tabs.update(tab.id, { url: `${TOOLS_URL}/#/watch?videoId=${ytVideoId}` });
+    }
+  }
 });
+
+function getExistingToolTabsOrNull() {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.query({ 'url': 'https://hololive.jetri.co/' }, tabs => tabs.length > 0 ? resolve(tabs) : resolve(null));
+  });
+}
+
+function pushVideoToExistingTools(tab, payload) {
+  chrome.tabs.sendMessage(tab.id, { action: 'append', payload });
+  chrome.tabs.update(tab.id, { selected: true });
+}
